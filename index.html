@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Learning Log</title>
+<meta name="description" content="A daily checklist of the concepts you learn.">
+<meta name="theme-color" content="#F2F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E131B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Learning Log">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column, like a notebook page. Composer on top, filters, then notes grouped by day. */
+:root {
+  color-scheme: light;
+  --bg: #F2F5F8;
+  --surface: #FFFFFF;
+  --ink: #141B27;
+  --muted: #5B6677;
+  --line: #DCE2E9;
+  --accent: #1D6F5B;
+  --accent-ink: #FFFFFF;
+  --mark: #E2F1EB;
+  --danger: #B5341F;
+  --font-display: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0E131B; --surface: #161D28; --ink: #E7ECF3; --muted: #93A0B3; --line: #28323F;
+    --accent: #4FC3A1; --accent-ink: #07130E; --mark: #15302A; --danger: #FF8D78;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  padding-top: max(28px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(64px, calc(env(safe-area-inset-bottom, 0px) + 32px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.page { max-width: 42rem; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+header { display: flex; flex-direction: column; gap: 4px; }
+.date { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 2.1rem; line-height: 1.1; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.summary { margin: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.composer { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.composer label { font-weight: 600; }
+textarea, input[type="text"], input[type="search"] {
+  font: inherit; font-size: 16px; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; width: 100%; min-width: 0;
+}
+textarea { resize: vertical; min-height: 5.2rem; }
+::placeholder { color: var(--muted); opacity: 0.8; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row input { flex: 1 1 11rem; }
+
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 8px 14px; font-weight: 500; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.primary:disabled { opacity: 0.45; cursor: default; filter: none; }
+.hint { margin: 0; font-size: 12px; color: var(--muted); }
+
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; color: var(--muted); padding: 7px 13px; font-weight: 500; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.toolbar input[type="search"] { flex: 1 1 10rem; width: auto; }
+
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 2px 11px; font-size: 13px; }
+.chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--mark); font-weight: 600; }
+
+.day { display: flex; flex-direction: column; gap: 8px; }
+.day + .day { margin-top: 8px; }
+.day-head { display: flex; align-items: baseline; gap: 10px; margin: 0; }
+.day-head h2 { font-family: var(--font-display); font-size: 1.05rem; margin: 0; font-weight: 600; }
+.day-head span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.item { display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.item.done { background: var(--mark); }
+.item.done .text { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 50%, transparent); }
+.item input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none; flex: none; margin: 2px 0 0; width: 22px; height: 22px;
+  border: 2px solid var(--muted); border-radius: 6px; background: transparent; cursor: pointer; display: grid; place-content: center;
+}
+.item input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+.item input[type="checkbox"]:checked::after { content: ""; width: 5px; height: 10px; border: solid var(--accent-ink); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
+.body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.tag { font-weight: 600; color: var(--accent); }
+.time { font-family: var(--font-mono); }
+.actions { margin-left: auto; display: flex; gap: 4px; }
+.link { border: 0; background: transparent; color: var(--muted); padding: 5px 8px; border-radius: 6px; font-size: 12px; }
+.link:hover { color: var(--ink); background: var(--bg); }
+.link.danger { color: var(--danger); font-weight: 600; }
+.editor { display: flex; flex-direction: column; gap: 8px; }
+.editor .row { align-items: center; }
+
+.empty { border: 1px dashed var(--line); border-radius: 10px; padding: 22px 18px; color: var(--muted); }
+.empty strong { display: block; color: var(--ink); font-family: var(--font-display); font-size: 1.05rem; margin-bottom: 2px; }
+.status { min-height: 1.2em; font-size: 12px; color: var(--muted); margin: 0; }
+.status.err { color: var(--danger); }
+
+.backup { border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.backup h2 { font-family: var(--font-display); font-size: 1.05rem; margin: 0; font-weight: 600; }
+.backup p { margin: 0; font-size: 12px; color: var(--muted); }
+.backup input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <p class="date" id="today"></p>
+    <h1>Learning Log</h1>
+    <p class="summary" id="summary">Loading your notes…</p>
+  </header>
+
+  <form class="composer" id="composer" autocomplete="off">
+    <label for="note">What did you learn today?</label>
+    <textarea id="note" rows="3" placeholder="e.g. A foreign key must point to a candidate key in the parent table."></textarea>
+    <div class="row">
+      <input type="text" id="tag" list="tag-options" placeholder="Subject (optional)" maxlength="40">
+      <datalist id="tag-options"></datalist>
+      <button class="btn primary" type="submit" id="add" disabled>Add concept</button>
+    </div>
+    <p class="hint">Ctrl or Cmd + Enter adds it. Tick a concept once you have revised it.</p>
+  </form>
+
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="Show">
+      <button type="button" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" data-filter="todo" aria-pressed="false">To revise</button>
+      <button type="button" data-filter="done" aria-pressed="false">Revised</button>
+    </div>
+    <input type="search" id="search" placeholder="Search notes" aria-label="Search notes">
+  </div>
+  <div class="tags" id="tags" role="group" aria-label="Filter by subject" hidden></div>
+
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+  <main id="list"></main>
+
+  <section class="backup" aria-labelledby="backup-title">
+    <h2 id="backup-title">Backup</h2>
+    <p>Your notes are saved on this device only. Download a backup now and then, and use it to move your log to a new phone or browser.</p>
+    <div class="row">
+      <button type="button" class="btn" id="export">Download backup</button>
+      <button type="button" class="btn" id="import">Restore from backup</button>
+      <input type="file" id="import-file" accept="application/json,.json">
+    </div>
+    <p id="last-backup"></p>
+  </section>
+</div>
+
+<script>
+(function () {
+  var KEY = "learning-log-v1";
+  var BACKUP_KEY = "learning-log-last-backup";
+  var notes = [];
+  var filter = "all", query = "", tagFilter = "";
+  var editingId = null, editText = "", editTag = "", confirmId = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function dayKey(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function parseDay(k) { var p = k.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function dayLabel(k) {
+    var now = new Date();
+    if (k === dayKey(now)) return "Today";
+    var y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    if (k === dayKey(y)) return "Yesterday";
+    return parseDay(k).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+  }
+  function newId() {
+    try { if (crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  /* ---------- storage on this device ---------- */
+  function load() {
+    try {
+      var data = JSON.parse(localStorage.getItem(KEY) || "[]");
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(notes)); setStatus(""); return true; }
+    catch (e) { setStatus("This browser would not save your notes. Download a backup so nothing is lost.", true); return false; }
+  }
+  function setStatus(msg, isErr) {
+    var s = $("status");
+    s.textContent = msg || "";
+    s.className = "status" + (isErr ? " err" : "");
+  }
+
+  /* ---------- actions ---------- */
+  function addNote() {
+    var text = $("note").value.trim();
+    if (!text) return;
+    var now = new Date();
+    notes.push({ id: newId(), text: text, tag: $("tag").value.trim(), done: false, createdAt: now.toISOString(), day: dayKey(now) });
+    save();
+    $("note").value = ""; syncAdd(); render();
+    $("note").focus();
+  }
+  function toggle(n) { confirmId = null; n.done = !n.done; save(); render(); }
+  function saveEdit(n) {
+    var t = editText.trim();
+    if (!t) return;
+    n.text = t; n.tag = editTag.trim();
+    editingId = null; save(); render();
+  }
+  function remove(n) { confirmId = null; notes = notes.filter(function (x) { return x.id !== n.id; }); save(); render(); }
+  function syncAdd() { $("add").disabled = !$("note").value.trim(); }
+
+  /* ---------- backup ---------- */
+  function showLastBackup() {
+    var t = "";
+    try { t = localStorage.getItem(BACKUP_KEY) || ""; } catch (e) {}
+    $("last-backup").textContent = t ? "Last backup: " + new Date(t).toLocaleString() : "No backup downloaded yet.";
+  }
+  function exportBackup() {
+    var payload = { app: "learning-log", version: 1, exportedAt: new Date().toISOString(), notes: notes };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "learning-log-backup-" + dayKey(new Date()) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    try { localStorage.setItem(BACKUP_KEY, new Date().toISOString()); } catch (e) {}
+    showLastBackup();
+  }
+  function importBackup(file) {
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var data = JSON.parse(r.result);
+        var incoming = Array.isArray(data) ? data : data.notes;
+        if (!Array.isArray(incoming)) throw new Error("bad file");
+        var have = {}; notes.forEach(function (n) { have[n.id] = true; });
+        var added = 0;
+        incoming.forEach(function (n) {
+          if (n && typeof n.id === "string" && typeof n.text === "string" && typeof n.createdAt === "string" && !have[n.id]) {
+            notes.push({ id: n.id, text: n.text, tag: typeof n.tag === "string" ? n.tag : "", done: !!n.done, createdAt: n.createdAt, day: typeof n.day === "string" ? n.day : dayKey(new Date(n.createdAt)) });
+            have[n.id] = true; added++;
+          }
+        });
+        save(); render();
+        setStatus(added ? "Restored " + added + (added === 1 ? " concept." : " concepts.") : "Nothing new to restore. Those notes are already here.");
+      } catch (e) { setStatus("That file is not a Learning Log backup.", true); }
+    };
+    r.readAsText(file);
+  }
+
+  /* ---------- rendering ---------- */
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function btn(label, cls, fn) {
+    var b = el("button", cls, label); b.type = "button"; b.addEventListener("click", fn); return b;
+  }
+
+  function renderTags() {
+    var counts = {};
+    notes.forEach(function (n) { if (n.tag) counts[n.tag] = (counts[n.tag] || 0) + 1; });
+    var names = Object.keys(counts).sort(function (a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
+    if (tagFilter && !counts[tagFilter]) tagFilter = "";
+    var box = $("tags");
+    box.textContent = "";
+    box.hidden = names.length === 0;
+    names.forEach(function (t) {
+      var c = el("button", "chip", t + " " + counts[t]);
+      c.type = "button";
+      c.setAttribute("aria-pressed", String(tagFilter === t));
+      c.addEventListener("click", function () { tagFilter = tagFilter === t ? "" : t; render(); });
+      box.appendChild(c);
+    });
+    var dl = $("tag-options");
+    dl.textContent = "";
+    names.forEach(function (t) { var o = document.createElement("option"); o.value = t; dl.appendChild(o); });
+  }
+
+  function itemEl(n) {
+    var li = el("li", "item" + (n.done ? " done" : ""));
+    var cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = !!n.done;
+    cb.setAttribute("aria-label", "Mark as revised");
+    cb.addEventListener("change", function () { toggle(n); });
+    li.appendChild(cb);
+
+    var body = el("div", "body");
+    if (editingId === n.id) {
+      var ed = el("div", "editor");
+      var ta = document.createElement("textarea");
+      ta.id = "edit-text"; ta.value = editText; ta.rows = 3;
+      ta.setAttribute("aria-label", "Edit note");
+      ta.addEventListener("input", function () { editText = ta.value; });
+      var row = el("div", "row");
+      var ti = document.createElement("input");
+      ti.type = "text"; ti.id = "edit-tag"; ti.value = editTag; ti.placeholder = "Subject (optional)"; ti.maxLength = 40;
+      ti.setAttribute("aria-label", "Subject");
+      ti.addEventListener("input", function () { editTag = ti.value; });
+      row.appendChild(ti);
+      row.appendChild(btn("Save", "btn primary", function () { saveEdit(n); }));
+      row.appendChild(btn("Cancel", "btn", function () { editingId = null; render(); }));
+      ed.appendChild(ta); ed.appendChild(row);
+      body.appendChild(ed);
+    } else {
+      body.appendChild(el("p", "text", n.text));
+      var meta = el("div", "meta");
+      if (n.tag) meta.appendChild(el("span", "tag", n.tag));
+      var t = new Date(n.createdAt);
+      if (!isNaN(t)) meta.appendChild(el("span", "time", pad(t.getHours()) + ":" + pad(t.getMinutes())));
+      var act = el("span", "actions");
+      act.appendChild(btn("Edit", "link", function () { editingId = n.id; editText = n.text; editTag = n.tag || ""; confirmId = null; render(); }));
+      if (confirmId === n.id) {
+        act.appendChild(btn("Delete it?", "link danger", function () { remove(n); }));
+        act.appendChild(btn("Keep", "link", function () { confirmId = null; render(); }));
+      } else {
+        act.appendChild(btn("Delete", "link", function () { confirmId = n.id; render(); }));
+      }
+      meta.appendChild(act);
+      body.appendChild(meta);
+    }
+    li.appendChild(body);
+    return li;
+  }
+
+  function render() {
+    var total = notes.length;
+    var done = notes.filter(function (n) { return n.done; }).length;
+    $("summary").textContent = total === 0 ? "Nothing logged yet." :
+      total + (total === 1 ? " concept" : " concepts") + " learned, " + done + " revised, " + (total - done) + " to go";
+
+    renderTags();
+    document.querySelectorAll("[data-filter]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-filter") === filter));
+    });
+
+    var q = query.trim().toLowerCase();
+    var items = notes.filter(function (n) {
+      if (filter === "todo" && n.done) return false;
+      if (filter === "done" && !n.done) return false;
+      if (tagFilter && n.tag !== tagFilter) return false;
+      if (q && (n.text + " " + (n.tag || "")).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    }).sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+
+    var list = $("list");
+    list.textContent = "";
+
+    if (total === 0) {
+      var e = el("div", "empty");
+      e.appendChild(el("strong", null, "Your log starts here"));
+      e.appendChild(el("span", null, "Write the first thing you learned today in the box above, then tick it off when you have revised it."));
+      list.appendChild(e);
+      return;
+    }
+    if (items.length === 0) {
+      var e2 = el("div", "empty");
+      e2.appendChild(el("strong", null, "No concepts match"));
+      e2.appendChild(el("span", null, "Try a different filter or clear the search."));
+      list.appendChild(e2);
+      return;
+    }
+
+    var groups = [], map = {};
+    items.forEach(function (n) {
+      var k = n.day || dayKey(new Date(n.createdAt));
+      if (!map[k]) { map[k] = []; groups.push(k); }
+      map[k].push(n);
+    });
+    groups.forEach(function (k) {
+      var sec = el("section", "day");
+      var head = el("div", "day-head");
+      head.appendChild(el("h2", null, dayLabel(k)));
+      head.appendChild(el("span", null, map[k].length + (map[k].length === 1 ? " concept" : " concepts")));
+      sec.appendChild(head);
+      var ul = document.createElement("ul");
+      map[k].forEach(function (n) { ul.appendChild(itemEl(n)); });
+      sec.appendChild(ul);
+      list.appendChild(sec);
+    });
+  }
+
+  /* ---------- wiring ---------- */
+  $("today").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  $("note").addEventListener("input", syncAdd);
+  $("composer").addEventListener("submit", function (e) { e.preventDefault(); addNote(); });
+  $("note").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); addNote(); }
+  });
+  document.querySelectorAll("[data-filter]").forEach(function (b) {
+    b.addEventListener("click", function () { filter = b.getAttribute("data-filter"); render(); });
+  });
+  $("search").addEventListener("input", function (e) { query = e.target.value; render(); });
+  $("export").addEventListener("click", exportBackup);
+  $("import").addEventListener("click", function () { $("import-file").click(); });
+  $("import-file").addEventListener("change", function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (f) importBackup(f);
+    e.target.value = "";
+  });
+
+  notes = load();
+  render();
+  showLastBackup();
+
+  // Ask the browser not to clear this app's data when storage runs low.
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+
+  // Work offline once opened.
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+})();
+</script>
+</body>
+</html>
